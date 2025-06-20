@@ -13,7 +13,12 @@ const PORT = process.env.PORT || 3000;
 // Middleware to parse JSON and URL-encoded data
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*'); // Allow all origins
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS'); // Allow specific methods
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization'); // Allow specific headers
+  next();
+});
 // Serve static files from the 'public' directory
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -25,14 +30,15 @@ const genAI = new GoogleGenerativeAI(process.env.API_KEY);
 const model = genAI.getGenerativeModel({model: 'gemini-1.5-flash'});
 
 async function generateText(req, res) {
+  console.log(req.body)
   const { prompt } = req.body;
 
   try {
     const result = await model.generateContent(prompt);
     const text = await result.response.text();
-
     res.json({ output: text});
   } catch (error) {
+    console.log(error)
     res.status(500).json({ error: error.message });
   }
 }
